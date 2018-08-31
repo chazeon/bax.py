@@ -1,6 +1,6 @@
 # bax.py
 
-Broken the axis, better.
+Breaks the axis, better.
 
 ## Reference
 
