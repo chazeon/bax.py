@@ -3,7 +3,7 @@ from matplotlib import gridspec
 import matplotlib.ticker as ticker
 
 class BrokenYAxesProxy:
-    def __init__(self, ylims=None, num_twiny_axes=2):
+    def __init__(self, ylims=None, num_twiny_axes=2, num_twinx_axes=1):
 
         # Geometry
 
@@ -18,11 +18,15 @@ class BrokenYAxesProxy:
         self.twiny_axes = [
             [ax.twiny() for ax in self.axes] for i in range(num_twiny_axes)
         ]
-        for ax, ylim in zip(self.axes, list(reversed(ylims))):
-            ax.set_ylim(*ylim)
-        # for twinx_axes in self.twinx_axes:
-        #     for ax, ylim in zip(twinx_axes, list(reversed(ylims))):
-        #         ax.set_ylim(*ylim)
+        self.twinx_axes = [
+            [ax.twinx() for ax in self.axes] for i in range(num_twinx_axes)
+        ]
+        for axes in [self.axes] + self.twinx_axes:
+            for ax, ylim in zip(axes, list(reversed(ylims))):
+                ax.set_ylim(*ylim)
+            # for twinx_axes in self.twinx_axes:
+            #     for ax, ylim in zip(twinx_axes, list(reversed(ylims))):
+            #         ax.set_ylim(*ylim)
  
         # Axes
         #for ax in self.axes[:-1] + self.twin_axes[:-1]:
@@ -131,7 +135,7 @@ class BrokenYAxesProxy:
             color=color,
             labelcolor=color,
             which='major',
-            direction='in' if inside else 'out',
+            direction='in' if inside != False else 'out',
             pad= -17 if inside else 0
         )
 
@@ -142,7 +146,7 @@ class BrokenYAxesProxy:
                 color=color,
                 labelcolor=color,
                 which='minor',
-                direction='in' if inside else 'out',
+                direction='in' if inside != False else 'out',
             )
 
         if axis_label is not None:
@@ -185,3 +189,42 @@ class BrokenYAxesProxy:
                 top=False,
                 which='minor'
             )
+
+    def set_twin_ax_yticks(self, axis_id: int, ticks, labels, minor_ticks=None, axis_label=None, color='k', inside=None):
+        for ax in self.twinx_axes[axis_id]:
+            ax.set_yticks(ticks)
+            ax.set_yticklabels(labels)
+            if minor_ticks is not None:
+                ax.set_yticks(minor_ticks, minor=True)
+ 
+            ax.get_yaxis().set_ticks_position('right')
+            ax.get_yaxis().set_label_position('right')
+
+            ax.grid(ls='-', which='major', lw=1, c=color, alpha=.2)
+            ax.grid(ls='-', which='minor', lw=.5, c=color, alpha=.1)
+
+            for ax in self.twinx_axes[axis_id]:
+                ax.tick_params(
+                    labeltop=True,
+                    top=True,
+                    color=color,
+                    labelcolor=color,
+                    which='major',
+                    direction='in' if inside != False else 'out',
+                    #pad= -17 if inside != False else 0
+                )
+
+            if minor_ticks is not None:
+                for ax in self.twinx_axes[axis_id]:
+                    ax.tick_params(
+                            labeltop=True,
+                            top=True,
+                            color=color,
+                            labelcolor=color,
+                            which='minor',
+                            direction='in' if inside != False else 'out',
+                        )
+
+        for axes in [self.axes] + self.twinx_axes:
+            for ax, ylim in zip(axes, list(reversed(self.ylims))):
+                ax.set_ylim(*ylim)
